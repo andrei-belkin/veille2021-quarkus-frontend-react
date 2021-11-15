@@ -39,7 +39,7 @@ export default function RegisterStudent(props) {
 
     return <Formik
         onSubmit={async (values, {setFieldError}) =>
-            AuthenticationService.registerUser("/students", values, setFieldError, open, props.history)
+            AuthenticationService.registerUser("/student", values, setFieldError, open, props.history)
         }
 
         validateOnBlur={false}

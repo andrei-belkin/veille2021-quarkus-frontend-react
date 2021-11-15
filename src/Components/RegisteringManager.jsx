@@ -45,7 +45,7 @@ export default function RegisteringManager() {
                           centered
                     >
                         <Tab label="Étudiant" id={`simple-tab-0`}/>
-                        <Tab label="Employeur" id={`simple-tab-1`}/>
+                        <Tab label="Employeur (à implémenter)" id={`simple-tab-1`} disabled/>
                     </Tabs>
                 </AppBar>
                 <TabPanel value={value} index={0}>
