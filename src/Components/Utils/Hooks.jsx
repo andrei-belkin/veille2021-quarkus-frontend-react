@@ -18,7 +18,7 @@ export function useModal() {
 }
 
 export function useApi() {
-    // const {open} = useContext(ModalContext);
+    const {open} = useContext(ModalContext);
     // const {semester} = useContext(SemesterContext);
     // const user = AuthenticationService.getCurrentUser();
     const api = axios.create({
@@ -36,7 +36,7 @@ export function useApi() {
     });
     api.interceptors.response.use(response => response, error => {
         console.warn("Axios error: " + error);
-        // open();
+        open();
     });
 
     return api;

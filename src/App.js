@@ -1,136 +1,81 @@
-import React from "react";
-import Grid from "@material-ui/core/Grid";
-import Container from "@material-ui/core/Container";
-import { ErrorMessage, Field, Form, Formik } from "formik";
-import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
-import { SimpleFileUpload, TextField } from "formik-material-ui";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import * as yup from "yup";
-import useStyles from "./Components/Utils/useStyles";
-import { useApi } from "./Components/Utils/Hooks";
-import { useHistory } from "react-router-dom";
+import DateFnsUtils from "@date-io/date-fns"
+import CssBaseline from "@material-ui/core/CssBaseline"
+import * as locales from "@material-ui/core/locale"
+import {createTheme} from "@material-ui/core/styles";
+import {MuiPickersUtilsProvider} from "@material-ui/pickers"
+import ThemeProvider from "@material-ui/styles/ThemeProvider"
+import axios from "axios"
+import {frCA} from "date-fns/locale"
+import React, {useEffect, useState} from "react"
+import {pdfjs} from "react-pdf"
+import {BrowserRouter as Router, Route, Switch} from "react-router-dom"
+import Login from "./Components/Login"
+import PasswordChange from "./Components/PasswordChange"
+import RegisteringManager from "./Components/RegisteringManager"
+import RouteSelector from "./Components/RouteSelector"
+import ErrorModal from "./Components/Utils/Modal/ErrorModal"
+import {BasicProtectedRoute} from "./Components/Utils/Routes"
+import {useModal, usePersistentState} from "./Services/Hooks"
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`
 
 export const ModalContext = React.createContext(null)
 export const SemesterContext = React.createContext(null)
 export const ThemeContext = React.createContext(null)
 
 function App() {
-    const classes = useStyles();
-    const api = useApi();
-    const history = useHistory();
+    const [isErrorModalOpen, openErrorModal, closeErrorModal] = useModal()
+    const [semester, setSemester] = useState(undefined)
+    const [isDarkMode, setDarkMode] = usePersistentState("darkMode")
+    const themeOptions = {
+        palette: {
+            type: isDarkMode ? "dark" : "light",
+            primary: {
+                main: "#78909c"
+            },
+            secondary: {
+                main: "#f57f17"
+            }
+        },
+        overrides: {
+            MuiOutlinedInput: {
+                input: {
+                    "&:-webkit-autofill": {
+                        "-webkit-box-shadow": isDarkMode ? "0 0 0 100px #424242 inset" : undefined
+                    }
+                }
+            }
+        }
 
-    function readFileAsync(file) {
-        return new Promise((resolve, reject) => {
-            let reader = new FileReader();
-            reader.onload = () => {
-                resolve(reader.result)
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        })
-    }
+    };
 
-    return (
-        <Grid
-            container
-            spacing={2}
-            direction="column"
-            alignItems="center"
-            justify="center"
-            style={{minHeight: '100%'}}
-        >
-            <Grid item xs={12} sm={7} lg={5}>
-                <Container component="main" maxWidth="sm" className={classes.container}>
-                    <Formik
-                        onSubmit={async (values) => readFileAsync(values.file).then((file) => {
-                            let dto = {...values};
-                            dto.file = file;
-                            return api
-                                .post("/resume/create", dto)
-                                .then(() => {
-                                    console.log("Posted resume : " + dto)
-                                    // history.push("/dashboard/listcv")
-                                })
-                        })
-                        }
+    useEffect(() => {
+        axios.get("http://localhost:8080/api/semesters/present")
+            .then(r => setSemester(r ? r.data : ""))
+    }, [])
 
-                        validateOnBlur={false}
-                        validateOnChange={false}
-                        enableReinitialize={true}
-                        validate={(values) => {
-                            const errors = {};
-                            if (values.file.type !== "application/pdf") {
-                                errors.file = "Le fichier doit être de type PDF"
-                            }
-                            return errors;
-                        }}
-                        validationSchema={yup.object()
-                            .shape({
-                                name: yup.string().trim().max(255).required("Ce champ est requis")
-                            })}
-                        initialValues={{
-                            name: "",
-                            file: "",
-                            ownerId: "812b14f9-4c48-4854-a021-411ac90207fa"
-                        }}
-                    >
-                        {({submitForm, isSubmitting}) => (
-                            <Form>
-                                <Grid container
-                                      alignItems="start"
-                                      justify="center"
-                                      spacing={2}>
-                                    <Typography variant="h1" className={classes.formTitle} style={{fontSize: "2em"}}>
-                                        Télécharger un nouveau CV
-                                    </Typography>
-                                    <Grid item xs={12} sm={6}>
-                                        <Field
-                                            component={TextField}
-                                            name="name"
-                                            id="name"
-                                            variant="outlined"
-                                            label="Nom du fichier"
-                                            fullWidth
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Field
-                                            component={SimpleFileUpload}
-                                            type={"file"}
-                                            name="file"
-                                            id="file"
-                                            variant="outlined"
-                                            label="Fichier PDF"
-                                            fullwidth
-                                            required
-                                        />
-                                        <ErrorMessage name={"file"}>
-                                            {msg => <p className="msgError"><span style={{color: "red"}}>{msg}</span>
-                                            </p>}
-                                        </ErrorMessage>
-                                    </Grid>
-                                    {isSubmitting && <LinearProgress/>}
-                                    <Button
-                                        id="buttonSubmit"
-                                        type={"submit"}
-                                        variant="contained"
-                                        fullWidth
-                                        size={"large"}
-                                        color="primary"
-                                        disabled={isSubmitting}
-                                        onClick={submitForm}
-                                    >
-                                        Téléverser le CV
-                                    </Button>
-                                </Grid>
-                            </Form>
-                        )}
-                    </Formik>
-                </Container>
-            </Grid>
-        </Grid>
-    )
+    return <ThemeProvider theme={createTheme(themeOptions, locales["frFR"])}>
+        <MuiPickersUtilsProvider utils={DateFnsUtils} locale={frCA}>
+            <ModalContext.Provider value={{open: openErrorModal}}>
+                <SemesterContext.Provider value={{semester, setSemester}}>
+                    <ThemeContext.Provider value={{isDarkMode, setDarkMode}}>
+                        <div className="App">
+                            <CssBaseline/>
+                            <Router>
+                                <Switch>
+                                    <Route exact path="/" component={Login}/>
+                                    <Route exact path="/register" component={RegisteringManager}/>
+                                    <Route exact path="/passwordChange" component={PasswordChange}/>
+                                    <BasicProtectedRoute exact={false} path="/dashboard" component={RouteSelector}/>
+                                </Switch>
+                            </Router>
+                            <ErrorModal isOpen={isErrorModalOpen} hide={closeErrorModal}/>
+                        </div>
+                    </ThemeContext.Provider>
+                </SemesterContext.Provider>
+            </ModalContext.Provider>
+        </MuiPickersUtilsProvider>
+    </ThemeProvider>
 }
 
-export default App;
+export default App
