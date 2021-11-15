@@ -4,9 +4,8 @@ import * as locales from "@material-ui/core/locale"
 import {createTheme} from "@material-ui/core/styles";
 import {MuiPickersUtilsProvider} from "@material-ui/pickers"
 import ThemeProvider from "@material-ui/styles/ThemeProvider"
-import axios from "axios"
 import {frCA} from "date-fns/locale"
-import React, {useEffect, useState} from "react"
+import React, {useState} from "react"
 import {pdfjs} from "react-pdf"
 import {BrowserRouter as Router, Route, Switch} from "react-router-dom"
 import Login from "./Components/Login"
@@ -48,11 +47,6 @@ function App() {
         }
 
     };
-
-    useEffect(() => {
-        axios.get("http://localhost:8080/api/semesters/present")
-            .then(r => setSemester(r ? r.data : ""))
-    }, [])
 
     return <ThemeProvider theme={createTheme(themeOptions, locales["frFR"])}>
         <MuiPickersUtilsProvider utils={DateFnsUtils} locale={frCA}>
